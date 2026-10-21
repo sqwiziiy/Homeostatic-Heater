@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "homeostatic_heater",
+  "version": "${version}",
+  "name": "Homeostatic Heater",
+  "description": "A coal-fired heater that warms nearby players through Homeostatic's block radiation data.",
+  "authors": ["Mentality"],
+  "license": "GPL-3.0-only",
+  "environment": "*",
+  "entrypoints": { "main": ["com.mentality.homeostatic_heater.HomeostaticHeater"] },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "1.20.1",
+    "java": ">=17"
+  },
+  "suggests": { "homeostatic": "*" }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "north": "homeostatic_heater:block/coal_heater_front",
+    "south": "homeostatic_heater:block/coal_heater_side",
+    "east": "homeostatic_heater:block/coal_heater_side",
+    "west": "homeostatic_heater:block/coal_heater_side",
+    "up": "homeostatic_heater:block/coal_heater_top",
+    "down": "homeostatic_heater:block/coal_heater_top",
+    "particle": "homeostatic_heater:block/coal_heater_side"
+  }
+}
