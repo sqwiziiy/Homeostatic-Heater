@@ -1,10 +1,20 @@
 # Texture generation prompts
 
-Created with the built-in image generation tool. The current front, side, and
-top `*_source.png` images are the generated masters; the textures packaged in
-the mod are 16×16 nearest-neighbour reductions with 5–8 opaque colors. The
-inventory icon reuses the lit front so it remains legible at slot size. The
-older `coal_heater_item_source.png` is retained as a previous design.
+Created with the built-in image generation tool. The front, side, and top
+`*_source.png` images are generated masters; game textures are 16×16
+nearest-neighbour reductions with small opaque palettes. The second lit-front
+master (`coal_heater_front_lit_frame2_source.png`) changes only the ember
+pattern. Its 16×16 reduction is composited over the original only where the
+embers are red/orange, keeping all metal pixels identical between frames. The
+two frames are stacked in `coal_heater_front_lit.png` and interpolated by its
+`.png.mcmeta` file. The inventory item now uses the 3D block model; the older
+`coal_heater_item_source.png` and flat item texture are unused historical art.
+
+Alternate-frame edit prompt: "Change ONLY the orange/yellow/red embers behind
+the dark vertical grille. Slightly move a few bright pixels upward and gently
+change the glow shape, like a quiet steady coal fire. Preserve every grille
+bar, the outer iron frame, all metal colors, orthographic composition and
+scale exactly. No extra flames, sparks, smoke, text, background or new detail."
 
 ## Current simplified texture prompts
 

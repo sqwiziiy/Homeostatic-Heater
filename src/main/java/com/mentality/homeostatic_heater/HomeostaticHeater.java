@@ -16,6 +16,7 @@ import net.minecraft.util.Identifier;
 /** Registers the heater. Homeostatic compatibility is data-driven; see resources/data. */
 public final class HomeostaticHeater implements ModInitializer {
     public static final String MOD_ID = "homeostatic_heater";
+    private static HeaterConfig config;
     public static final CoalHeaterBlock COAL_HEATER = new CoalHeaterBlock(
             AbstractBlock.Settings.create().strength(3.5F).requiresTool()
                     .luminance(state -> state.get(CoalHeaterBlock.LIT) ? 13 : 0));
@@ -38,6 +39,7 @@ public final class HomeostaticHeater implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        config = HeaterConfig.load();
         Registry.register(Registries.BLOCK, id("coal_heater"), COAL_HEATER);
         Registry.register(Registries.BLOCK, new Identifier("mentality_heater", "coal_heater"), LEGACY_MENTALITY_HEATER);
         Registry.register(Registries.BLOCK, new Identifier("stormheater", "coal_heater"), LEGACY_STORMHEATER);
@@ -52,6 +54,10 @@ public final class HomeostaticHeater implements ModInitializer {
 
     public static Identifier id(String path) {
         return new Identifier(MOD_ID, path);
+    }
+
+    public static HeaterConfig config() {
+        return config;
     }
 
     public static BlockEntityType<CoalHeaterBlockEntity> entityTypeFor(net.minecraft.block.BlockState state) {

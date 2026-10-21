@@ -1,4 +1,3 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": { "layer0": "homeostatic_heater:item/coal_heater" }
+  "parent": "homeostatic_heater:block/coal_heater_lit"
 }

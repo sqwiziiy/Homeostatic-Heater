@@ -1,1 +1,1 @@
-{ "block.homeostatic_heater.coal_heater": "Угольный обогреватель", "block.mentality_heater.coal_heater": "Угольный обогреватель (старый)", "block.stormheater.coal_heater": "Угольный обогреватель (старый)" }
+{ "block.homeostatic_heater.coal_heater": "Угольный обогреватель", "block.mentality_heater.coal_heater": "Угольный обогреватель (старый)", "block.stormheater.coal_heater": "Угольный обогреватель (старый)", "message.homeostatic_heater.full": "Обогреватель заполнен углём" }

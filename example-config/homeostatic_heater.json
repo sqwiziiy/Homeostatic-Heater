@@ -1,0 +1,5 @@
+{
+  "burn_ticks_per_coal": 1600,
+  "max_coal": 16,
+  "always_active": false
+}

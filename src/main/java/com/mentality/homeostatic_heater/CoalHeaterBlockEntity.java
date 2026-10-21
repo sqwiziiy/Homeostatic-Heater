@@ -4,32 +4,66 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/** Persists only remaining burn time, so adding/removing the mod never rewrites unrelated world data. */
+/** Persists fuel only in this block entity, including a migration from the old remainingTicks tag. */
 public final class CoalHeaterBlockEntity extends BlockEntity {
-    private static final int TICKS_PER_COAL = 1600; // 80 seconds, same burn time as vanilla coal.
-    private static final int MAX_FUEL_TICKS = TICKS_PER_COAL * 16;
-    private int remainingTicks;
+    private static final int OLD_TICKS_PER_COAL = 1600;
+    private int burnTicksLeft;
+    private int queuedCoal;
+    private int crackleCooldown;
 
     public CoalHeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HomeostaticHeater.entityTypeFor(state), pos, state);
     }
 
     public boolean addFuel() {
-        if (remainingTicks > MAX_FUEL_TICKS - TICKS_PER_COAL) return false;
-        remainingTicks += TICKS_PER_COAL;
+        HeaterConfig config = HomeostaticHeater.config();
+        int loadedCoal = queuedCoal + (burnTicksLeft > 0 ? 1 : 0);
+        if (loadedCoal >= config.maxCoal()) return false;
+        if (burnTicksLeft == 0) {
+            burnTicksLeft = config.burnTicksPerCoal();
+        } else {
+            queuedCoal++;
+        }
         updateLit(true);
         markDirty();
         return true;
     }
 
     public static void tick(World world, BlockPos pos, BlockState state, CoalHeaterBlockEntity heater) {
-        if (heater.remainingTicks <= 0) return;
-        heater.remainingTicks--;
-        if (heater.remainingTicks == 0) heater.updateLit(false);
-        if (heater.remainingTicks % 20 == 0) heater.markDirty();
+        HeaterConfig config = HomeostaticHeater.config();
+        if (config.alwaysActive()) {
+            heater.updateLit(true);
+            heater.tickCrackle(world, pos);
+            return;
+        }
+        if (heater.burnTicksLeft > 0) {
+            heater.burnTicksLeft--;
+            if (heater.burnTicksLeft == 0 && heater.queuedCoal > 0) {
+                heater.queuedCoal--;
+                heater.burnTicksLeft = config.burnTicksPerCoal();
+            }
+            heater.updateLit(heater.burnTicksLeft > 0);
+            if (heater.burnTicksLeft == 0 || world.getTime() % 20 == 0) heater.markDirty();
+            if (heater.burnTicksLeft > 0) heater.tickCrackle(world, pos);
+        } else {
+            heater.updateLit(false);
+            heater.crackleCooldown = 0;
+        }
+    }
+
+    private void tickCrackle(World world, BlockPos pos) {
+        if (crackleCooldown <= 0) {
+            crackleCooldown = 80 + world.random.nextInt(101);
+        } else if (--crackleCooldown == 0) {
+            world.playSound(null, pos, SoundEvents.BLOCK_CAMPFIRE_CRACKLE,
+                    SoundCategory.BLOCKS, 0.35F, 0.9F + world.random.nextFloat() * 0.2F);
+            crackleCooldown = 80 + world.random.nextInt(101);
+        }
     }
 
     private void updateLit(boolean lit) {
@@ -41,12 +75,25 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
     @Override
     public void readNbt(NbtCompound nbt) {
         super.readNbt(nbt);
-        remainingTicks = Math.max(0, Math.min(MAX_FUEL_TICKS, nbt.getInt("remainingTicks")));
+        burnTicksLeft = 0;
+        queuedCoal = 0;
+        if (nbt.contains("burnTicksLeft")) {
+            burnTicksLeft = Math.max(0, nbt.getInt("burnTicksLeft"));
+            queuedCoal = Math.max(0, nbt.getInt("queuedCoal"));
+        } else {
+            // 1.2.0 and earlier stored the entire buffer as remainingTicks.
+            int oldTicks = Math.max(0, Math.min(OLD_TICKS_PER_COAL * 16, nbt.getInt("remainingTicks")));
+            if (oldTicks > 0) {
+                queuedCoal = (oldTicks - 1) / OLD_TICKS_PER_COAL;
+                burnTicksLeft = oldTicks - queuedCoal * OLD_TICKS_PER_COAL;
+            }
+        }
     }
 
     @Override
     protected void writeNbt(NbtCompound nbt) {
         super.writeNbt(nbt);
-        nbt.putInt("remainingTicks", remainingTicks);
+        nbt.putInt("burnTicksLeft", burnTicksLeft);
+        nbt.putInt("queuedCoal", queuedCoal);
     }
 }

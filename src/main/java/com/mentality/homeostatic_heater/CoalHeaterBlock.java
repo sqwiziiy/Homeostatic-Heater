@@ -25,6 +25,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.text.Text;
 import net.minecraft.world.World;
 
 /** A compact coal heater. Fuel is added directly with coal or charcoal; it has no GUI or inventory. */
@@ -70,6 +71,8 @@ public final class CoalHeaterBlock extends BlockWithEntity implements BlockEntit
                     if (!player.getAbilities().creativeMode) held.decrement(1);
                     world.playSound(null, pos, SoundEvents.ITEM_FLINTANDSTEEL_USE,
                             SoundCategory.BLOCKS, 0.8F, 0.9F + world.random.nextFloat() * 0.2F);
+                } else {
+                    player.sendMessage(Text.translatable("message.homeostatic_heater.full"), true);
                 }
             }
             return ActionResult.success(world.isClient);
