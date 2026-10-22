@@ -1,4 +1,4 @@
-name: Publish GitHub release to Modrinth
+name: Publish to Modrinth
 
 on:
   release:
@@ -6,12 +6,16 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: "Existing GitHub release tag (example: v1.6.0)"
-        required: true
+        description: "Optional: existing release tag (leave empty to publish current main)"
+        required: false
         type: string
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: modrinth-publish-${{ github.event.release.tag_name || inputs.release_tag || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -20,52 +24,80 @@ jobs:
     env:
       MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
       MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
-      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+      RELEASE_REF: ${{ github.event.release.tag_name || inputs.release_tag || 'main' }}
     steps:
-      - name: Check out exact release tag
+      - name: Check out the published version
         uses: actions/checkout@v7
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ env.RELEASE_REF }}
 
-      - name: Setup Java 17
+      - name: Set up Java 17
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Check release tag matches Gradle version
+      - name: Validate version and prepare release notes
         shell: bash
         run: |
           set -euo pipefail
           version="$(sed -n 's/^mod_version=//p' gradle.properties)"
-          test "$RELEASE_TAG" = "v$version" || { echo "::error::Expected tag v$version but got $RELEASE_TAG"; exit 1; }
+          test -n "$version" || { echo "::error::Missing mod_version"; exit 1; }
+          if [[ "$RELEASE_REF" != "main" && "$RELEASE_REF" != "v$version" ]]; then
+            echo "::error::Tag $RELEASE_REF does not match project version v$version"
+            exit 1
+          fi
+          echo "MOD_VERSION=$version" >> "$GITHUB_ENV"
+          awk -v heading="## $version" '
+            $0 == heading { printing=1; next }
+            printing && /^## / { exit }
+            printing { print }
+          ' CHANGELOG.md > release-notes.md
+          test -s release-notes.md || {
+            echo "::error::No changelog section for $version"; exit 1;
+          }
 
-      - name: Build and test release
+      - name: Build and test release JAR
         run: ./gradlew --no-daemon clean build
 
-      - name: Check Modrinth configuration
-        if: ${{ env.MODRINTH_TOKEN == '' || env.MODRINTH_PROJECT_ID == '' }}
+      - name: Verify distribution file
+        shell: bash
         run: |
-          echo "::warning::Modrinth skipped: add repository secret MODRINTH_TOKEN and repository variable MODRINTH_PROJECT_ID."
+          set -euo pipefail
+          test -f "build/libs/homeostatic-heater-${MOD_VERSION}.jar"
 
-      - name: Publish to Modrinth
+      - name: Upload JAR to existing GitHub Release
+        if: ${{ github.event_name == 'release' || inputs.release_tag != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" >/dev/null
+          gh release upload "$TAG" "build/libs/homeostatic-heater-${MOD_VERSION}.jar" --clobber
+
+      - name: Note missing Modrinth credentials
+        if: ${{ env.MODRINTH_TOKEN == '' || env.MODRINTH_PROJECT_ID == '' }}
+        run: echo "::warning::Modrinth upload skipped (set MODRINTH_TOKEN secret and MODRINTH_PROJECT_ID variable)."
+
+      - name: Upload version to Modrinth
         if: ${{ env.MODRINTH_TOKEN != '' && env.MODRINTH_PROJECT_ID != '' }}
         uses: Kira-NT/mc-publish@v3.3.1
         with:
           modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
           modrinth-token: ${{ env.MODRINTH_TOKEN }}
-          name: "Homeostatic Heater ${{ env.RELEASE_TAG }}"
-          version: ${{ env.RELEASE_TAG }}
+          name: Homeostatic Heater ${{ env.MOD_VERSION }}
+          version: ${{ env.MOD_VERSION }}
           version-type: release
-          changelog-file: CHANGELOG.md
-          files: |
-            build/libs/homeostatic-heater-*.jar
-            !build/libs/*-sources.jar
+          changelog-file: release-notes.md
+          files: build/libs/homeostatic-heater-${{ env.MOD_VERSION }}.jar
           loaders: fabric
           game-versions: '1.20.1'
+          environment: client | server
           java: '17'
           modrinth-dependencies: |
             oDobngty(required)
