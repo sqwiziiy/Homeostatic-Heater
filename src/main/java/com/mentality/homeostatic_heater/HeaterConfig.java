@@ -31,15 +31,19 @@ public record HeaterConfig(int burnTicksPerCoal, int maxCoal, boolean alwaysActi
                 Files.createDirectories(path.getParent());
                 Files.writeString(path, DEFAULT_JSON, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW);
             }
-            JsonObject json = JsonParser.parseString(Files.readString(path, StandardCharsets.UTF_8)).getAsJsonObject();
-            return new HeaterConfig(
-                    integer(json, "burn_ticks_per_coal", 1600, 1, 1_728_000),
-                    integer(json, "max_coal", 16, 1, 64),
-                    booleanValue(json, "always_active", false));
+            return parse(Files.readString(path, StandardCharsets.UTF_8));
         } catch (IOException | RuntimeException exception) {
             LOGGER.warn("Cannot read {}; using default heater settings without changing the file", path, exception);
             return new HeaterConfig(1600, 16, false);
         }
+    }
+
+    static HeaterConfig parse(String jsonText) {
+        JsonObject json = JsonParser.parseString(jsonText).getAsJsonObject();
+        return new HeaterConfig(
+                integer(json, "burn_ticks_per_coal", 1600, 1, 1_728_000),
+                integer(json, "max_coal", 16, 1, 64),
+                booleanValue(json, "always_active", false));
     }
 
     private static int integer(JsonObject json, String key, int defaultValue, int minimum, int maximum) {

@@ -1,1 +1,10 @@
-{ "block.homeostatic_heater.coal_heater": "Угольный обогреватель", "block.mentality_heater.coal_heater": "Угольный обогреватель (старый)", "block.stormheater.coal_heater": "Угольный обогреватель (старый)", "message.homeostatic_heater.full": "Обогреватель заполнен углём" }
+{
+  "block.homeostatic_heater.coal_heater": "Угольный обогреватель",
+  "block.mentality_heater.coal_heater": "Угольный обогреватель (старый)",
+  "block.stormheater.coal_heater": "Угольный обогреватель (старый)",
+  "message.homeostatic_heater.full": "Обогреватель заполнен углём",
+  "hud.homeostatic_heater.remaining": "Осталось: %1$s мин %2$s с",
+  "hud.homeostatic_heater.always_active": "Работает постоянно",
+  "advancements.homeostatic_heater.heating_season.title": "Отоплительный сезон",
+  "advancements.homeostatic_heater.heating_season.description": "Скрафтите угольный обогреватель и подготовьтесь к холодам"
+}

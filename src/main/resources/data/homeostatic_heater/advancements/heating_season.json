@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": { "item": "minecraft:campfire" },
+    "title": { "translate": "advancements.homeostatic_heater.heating_season.title" },
+    "description": { "translate": "advancements.homeostatic_heater.heating_season.description" },
+    "background": "minecraft:textures/block/stone_bricks.png",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "crafted_heater": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": { "recipe_id": "homeostatic_heater:coal_heater" }
+    }
+  },
+  "requirements": [["crafted_heater"]]
+}

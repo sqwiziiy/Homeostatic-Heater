@@ -1,4 +1,30 @@
-# Homeostatic Heater (Fabric 1.20.1)
+# 🔥 Homeostatic Heater
+
+[![Build and test](https://github.com/sqwiziiy/Homeostatic-Heater/actions/workflows/build.yml/badge.svg)](https://github.com/sqwiziiy/Homeostatic-Heater/actions/workflows/build.yml)
+![Minecraft 1.20.1](https://img.shields.io/badge/Minecraft-1.20.1-3C8527)
+![Fabric](https://img.shields.io/badge/Loader-Fabric-DBD0B4)
+![Java 17](https://img.shields.io/badge/Java-17-E76F00)
+![GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-3B57A6)
+
+Угольный обогреватель для зимней виллы в Minecraft Fabric 1.20.1. Работает с
+Homeostatic через его datapack-систему теплового излучения. Маленький блок,
+без GUI, mixin и изменений чужих сохранений.
+
+**[Скачать последнюю версию](https://github.com/sqwiziiy/Homeostatic-Heater/releases/latest)** ·
+[Инструкция по установке](#install) · [Проверка в игре](TESTING.md) ·
+[История изменений](CHANGELOG.md)
+
+## Что умеет
+
+- Греет игроков, пока горит уголь, с учётом стандартного радиуса и преград Homeostatic.
+- Показывает оставшееся время при **Shift + наведении на установленный блок**: минуты и секунды синхронизированы с сервером.
+- Даёт достижение **«Отоплительный сезон»** с иконкой костра именно за крафт.
+- Поддерживает конфиг длительности горения, вместимости и режима без расхода угля.
+- Имеет объёмную модель предмета, спокойную анимацию огня, звук загрузки угля и редкое потрескивание.
+
+---
+
+## English overview
 
 Coal Heater is a small coal-fired block. It integrates with
 Homeostatic **only through Homeostatic's published datapack block-radiation
@@ -30,6 +56,10 @@ vented metal plate. The inventory item is a 3D block model, not a flat sprite.
 Successfully adding fuel plays the flint-and-steel ignition sound; a full
 heater does not consume coal or play the sound. A running heater occasionally
 plays a quiet campfire crackle.
+Hold Shift and aim at a placed heater to see its remaining time in minutes and
+seconds. In always-active mode the tooltip says it runs continuously. Crafting
+the heater awards the **Heating Season** advancement with a campfire icon;
+using `/give` does not.
 
 ## Server settings
 
@@ -55,6 +85,12 @@ check the server log for a warning.
 Existing 1.2.0 and older heaters migrate their remaining burn time when loaded.
 Lowering `max_coal` does not delete fuel already stored; it only prevents new
 coal from being inserted until the stored amount falls below the new limit.
+
+| Setting | Default | Purpose |
+| --- | ---: | --- |
+| `burn_ticks_per_coal` | `1600` | 80 seconds of heat per coal; 20 ticks = 1 second |
+| `max_coal` | `16` | Maximum coal pieces held, including the one burning |
+| `always_active` | `false` | If `true`, stays lit without consuming fuel |
 
 When Homeostatic is installed, a lit heater is registered as a heat-radiant
 block with `max_radiation: 8325.0`, the same value Homeostatic uses for a lit
@@ -83,7 +119,11 @@ export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ./gradlew build
 ```
 
-The distributable jar is `build/libs/homeostatic-heater-1.3.0.jar`.
+The distributable jar is `build/libs/homeostatic-heater-1.4.0.jar`.
+
+GitHub Actions uses Java 17 to validate resource JSON, run unit tests, build the
+mod, and provide a downloadable build artifact. See [the test checklist](TESTING.md)
+for client-side and Homeostatic checks that CI cannot perform.
 
 ## Install
 

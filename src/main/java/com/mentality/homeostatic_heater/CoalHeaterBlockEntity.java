@@ -4,6 +4,10 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
@@ -15,6 +19,8 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
     private int burnTicksLeft;
     private int queuedCoal;
     private int crackleCooldown;
+    private int displayTicksPerCoal = 1600;
+    private boolean displayAlwaysActive;
 
     public CoalHeaterBlockEntity(BlockPos pos, BlockState state) {
         super(HomeostaticHeater.entityTypeFor(state), pos, state);
@@ -31,6 +37,7 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
         }
         updateLit(true);
         markDirty();
+        syncStatus();
         return true;
     }
 
@@ -48,7 +55,10 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
                 heater.burnTicksLeft = config.burnTicksPerCoal();
             }
             heater.updateLit(heater.burnTicksLeft > 0);
-            if (heater.burnTicksLeft == 0 || world.getTime() % 20 == 0) heater.markDirty();
+            if (heater.burnTicksLeft == 0 || world.getTime() % 20 == 0) {
+                heater.markDirty();
+                heater.syncStatus();
+            }
             if (heater.burnTicksLeft > 0) heater.tickCrackle(world, pos);
         } else {
             heater.updateLit(false);
@@ -69,7 +79,33 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
     private void updateLit(boolean lit) {
         if (world != null && getCachedState().get(CoalHeaterBlock.LIT) != lit) {
             world.setBlockState(pos, getCachedState().with(CoalHeaterBlock.LIT, lit), Block.NOTIFY_ALL);
+            syncStatus();
         }
+    }
+
+    private void syncStatus() {
+        if (world instanceof ServerWorld serverWorld) serverWorld.getChunkManager().markForUpdate(pos);
+    }
+
+    public long getRemainingTicksForDisplay() {
+        return FuelDuration.totalTicks(burnTicksLeft, queuedCoal, displayTicksPerCoal);
+    }
+
+    public boolean isAlwaysActiveForDisplay() {
+        return displayAlwaysActive;
+    }
+
+    @Override
+    public Packet<ClientPlayPacketListener> toUpdatePacket() {
+        return BlockEntityUpdateS2CPacket.create(this, BlockEntity::toInitialChunkDataNbt);
+    }
+
+    @Override
+    public NbtCompound toInitialChunkDataNbt() {
+        NbtCompound nbt = createNbt();
+        nbt.putInt("displayTicksPerCoal", HomeostaticHeater.config().burnTicksPerCoal());
+        nbt.putBoolean("displayAlwaysActive", HomeostaticHeater.config().alwaysActive());
+        return nbt;
     }
 
     @Override
@@ -88,6 +124,9 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
                 burnTicksLeft = oldTicks - queuedCoal * OLD_TICKS_PER_COAL;
             }
         }
+        displayTicksPerCoal = Math.max(1, nbt.contains("displayTicksPerCoal")
+                ? nbt.getInt("displayTicksPerCoal") : 1600);
+        displayAlwaysActive = nbt.getBoolean("displayAlwaysActive");
     }
 
     @Override
