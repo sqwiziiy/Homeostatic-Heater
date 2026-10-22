@@ -9,19 +9,16 @@
 ![GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-3B57A6)
 
 A compact coal- and lava-fueled heater for Minecraft Fabric 1.20.1. It warms nearby players
-through Homeostatic's block-radiation datapack system, without mixins, patched
-Homeostatic classes, or world conversion.
+using the Homeostatic temperature system.
 
 [Download the latest release](https://github.com/sqwiziiy/Homeostatic-Heater/releases/latest) ·
-[Installation](#installation) · [In-game test checklist](TESTING.md) ·
-[Changelog](CHANGELOG.md)
+[Installation](#installation) · [Changelog](CHANGELOG.md)
 
 ## Features
 
 - Heats players while lit, following Homeostatic's range and obstruction rules.
 - Hold Shift and aim at a placed heater to see its remaining minutes and seconds,
-  **Inactive**, or **Always active**. The server computes the status and time;
-  clients only display the synchronized result.
+  **Inactive**, **Switched off**, or **Always active**.
 - Crafting it awards the **Heating Season** advancement with a campfire icon.
 - Burns coal, charcoal, or up to **one lava bucket** (returns the empty bucket). Lava burns longer than coal.
 - Right-click with an empty main hand to switch the heater off/on, pausing fuel consumption.
@@ -74,10 +71,8 @@ Find the heater in **Functional Blocks**, or use
 - Hold Shift and look at a placed heater for the server-synchronized status.
   **Switched off** shows the remaining fuel time.
 
-Fuel loading, switching, timing, and radiation state are server-controlled.
 There is no inventory GUI. The block drops itself if broken, but unused
-stored fuel is not refunded. The server synchronizes the HUD around once per
-second during normal burning. Creative mode does not consume items.
+stored fuel is not refunded. Creative mode does not consume items.
 
 ## Server configuration
 
@@ -99,12 +94,11 @@ Edit `config/homeostatic_heater.json` **on the server** and restart to apply cha
 | `max_coal` | `16` | Maximum stored coal items (independent of lava) |
 | `always_active` | `false` | Free heating **only while manually switched on** |
 
-20 ticks = 1 second. Both burn durations accept 1–1,728,000,
-and `max_coal` accepts 1–64. Old config files automatically use the default
-lava duration; they are not overwritten. Bad configs are preserved and produce
-a warning. Previously placed blocks, including legacy registry IDs and coal
-save data, remain compatible. When switching to `always_active`, saved
-fuel remains stored and paused. Client configs do not change server behavior.
+20 ticks = 1 second. Both burn durations accept 1–1,728,000;
+`max_coal` accepts 1–64. Settings are read on server startup. Existing
+configurations work without changes; the new lava setting uses its default
+until configured. Previously placed heaters and their stored fuel are
+preserved when upgrading.
 
 ## Homeostatic heat strength
 
@@ -115,9 +109,8 @@ heaters across a large villa. Distance and walls still affect warmth.
 
 To change heat strength, edit the optional
 [`server-config-datapack/`](server-config-datapack/) and zip its **contents**.
-Put the zip into `<world>/datapacks/` and run `/reload`. The release also
-includes a ready-made zip to edit. Increasing radiation does not extend
-Homeostatic's scan radius.
+Put the zip into `<world>/datapacks/` and run `/reload`.
+Increasing radiation does not extend Homeostatic's scan radius.
 
 ## Installation
 
@@ -127,14 +120,14 @@ Homeostatic's scan radius.
    Homeostatic is a required dependency.
 3. Remove older heater jars. Put the release jar in the server's and every
    client's `mods/` directory. Keep only one version.
-4. Back up your world, start the server, join with a matching client mod set,
-   and follow the [test checklist](TESTING.md).
+4. Back up your world before upgrading. Start the server and join with the
+   same mod version on every client.
 
 The Fabric mod ID is `homeostatic_heater`; Java package is
 `com.mentality.homeostatic_heater`. Legacy IDs `mentality_heater` and
 `stormheater` remain registered so existing blocks and items still load.
 
-## Building and testing
+## Building from source
 
 Compile with JDK 17 even if your production server runs a newer Java:
 
@@ -143,18 +136,8 @@ export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ./gradlew build
 ```
 
-The jar is `build/libs/homeostatic-heater-1.6.0.jar`. GitHub Actions validates
-resource JSON, runs unit tests, builds the jar with Java 17, and uploads it as
-a build artifact. Rendering, particles, sound, crafting, and Homeostatic
-temperature behavior still require the [in-game checklist](TESTING.md).
-
-## Publishing on Modrinth
-
-When a **GitHub Release** is published, the release workflow builds the exact
-GitHub tag, runs tests and publishes its jar to Modrinth. To activate it,
-follow [PUBLISHING.md](PUBLISHING.md). Until the Modrinth token and project ID
-are configured, the job builds but **skips the upload**. Existing releases
-can be published later using manual workflow dispatch.
+The jar is `build/libs/homeostatic-heater-1.6.0.jar`. Automated builds and
+unit tests run with GitHub Actions.
 
 License: [GNU GPL-3.0-only](LICENSE) for the mod source and original assets in
 `artwork/` and `src/main/resources/`. The three vanilla recipe icons in
