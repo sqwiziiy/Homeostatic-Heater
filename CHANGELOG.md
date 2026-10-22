@@ -1,16 +1,25 @@
-# Изменения
+# Changelog
+
+[Русская версия](CHANGELOG_RU.md)
+
+## 1.5.0
+
+- The server now computes the HUD's remaining time and state; clients receive display-only values.
+- An empty heater says **Inactive** instead of `0 min 00 sec`.
+- A working heater occasionally emits a small smoke particle.
+- Separate English and Russian READMEs and a visual recipe with Minecraft PNG icons.
 
 ## 1.4.0
 
-- Подсказка при Shift + наведении на установленный обогреватель: остаток в минутах и секундах или постоянный режим.
-- Достижение «Отоплительный сезон» именно за крафт, с иконкой костра.
-- Синхронизация таймера с сервера, автоматические тесты и GitHub Actions CI.
+- Shift + aim HUD for remaining minutes and seconds or always-active mode.
+- **Heating Season** crafting advancement with a campfire icon.
+- Server-to-client timer synchronization, unit tests, and GitHub Actions CI.
 
 ## 1.3.0
 
-- Конфиг времени горения, вместимости и постоянной работы.
-- Сообщение при полной загрузке углём, редкое потрескивание, спокойная анимация огня и объёмная модель предмета.
+- Configuration for burn time, capacity, and always-active mode.
+- Full-fuel message, occasional crackling, calm fire animation, and 3D item model.
 
 ## 1.2.0
 
-- Название Homeostatic Heater, упрощённые текстуры и звук при загрузке угля.
+- Homeostatic Heater name, simpler textures, and ignition sound when adding coal.

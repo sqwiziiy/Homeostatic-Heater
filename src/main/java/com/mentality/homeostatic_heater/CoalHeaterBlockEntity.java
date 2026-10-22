@@ -7,6 +7,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -19,7 +20,9 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
     private int burnTicksLeft;
     private int queuedCoal;
     private int crackleCooldown;
-    private int displayTicksPerCoal = 1600;
+    private long displayMinutes;
+    private int displaySeconds;
+    private boolean displayActive;
     private boolean displayAlwaysActive;
 
     public CoalHeaterBlockEntity(BlockPos pos, BlockState state) {
@@ -46,6 +49,7 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
         if (config.alwaysActive()) {
             heater.updateLit(true);
             heater.tickCrackle(world, pos);
+            heater.tickSmoke(world, pos);
             return;
         }
         if (heater.burnTicksLeft > 0) {
@@ -59,7 +63,10 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
                 heater.markDirty();
                 heater.syncStatus();
             }
-            if (heater.burnTicksLeft > 0) heater.tickCrackle(world, pos);
+            if (heater.burnTicksLeft > 0) {
+                heater.tickCrackle(world, pos);
+                heater.tickSmoke(world, pos);
+            }
         } else {
             heater.updateLit(false);
             heater.crackleCooldown = 0;
@@ -76,6 +83,14 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
         }
     }
 
+    private void tickSmoke(World world, BlockPos pos) {
+        if (world instanceof ServerWorld serverWorld && world.random.nextInt(70) == 0) {
+            serverWorld.spawnParticles(ParticleTypes.SMOKE,
+                    pos.getX() + 0.5, pos.getY() + 1.03, pos.getZ() + 0.5,
+                    1, 0.08, 0.01, 0.08, 0.005);
+        }
+    }
+
     private void updateLit(boolean lit) {
         if (world != null && getCachedState().get(CoalHeaterBlock.LIT) != lit) {
             world.setBlockState(pos, getCachedState().with(CoalHeaterBlock.LIT, lit), Block.NOTIFY_ALL);
@@ -87,8 +102,12 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
         if (world instanceof ServerWorld serverWorld) serverWorld.getChunkManager().markForUpdate(pos);
     }
 
-    public long getRemainingTicksForDisplay() {
-        return FuelDuration.totalTicks(burnTicksLeft, queuedCoal, displayTicksPerCoal);
+    public FuelDuration getRemainingForDisplay() {
+        return new FuelDuration(displayMinutes, displaySeconds);
+    }
+
+    public boolean isActiveForDisplay() {
+        return displayActive;
     }
 
     public boolean isAlwaysActiveForDisplay() {
@@ -102,9 +121,14 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
 
     @Override
     public NbtCompound toInitialChunkDataNbt() {
-        NbtCompound nbt = createNbt();
-        nbt.putInt("displayTicksPerCoal", HomeostaticHeater.config().burnTicksPerCoal());
-        nbt.putBoolean("displayAlwaysActive", HomeostaticHeater.config().alwaysActive());
+        HeaterConfig config = HomeostaticHeater.config();
+        HeaterDisplayStatus status = HeaterDisplayStatus.fromFuel(
+                burnTicksLeft, queuedCoal, config.burnTicksPerCoal(), config.alwaysActive());
+        NbtCompound nbt = new NbtCompound();
+        nbt.putBoolean("displayActive", status.active());
+        nbt.putBoolean("displayAlwaysActive", status.alwaysActive());
+        nbt.putLong("displayMinutes", status.remaining().minutes());
+        nbt.putInt("displaySeconds", status.remaining().seconds());
         return nbt;
     }
 
@@ -124,8 +148,9 @@ public final class CoalHeaterBlockEntity extends BlockEntity {
                 burnTicksLeft = oldTicks - queuedCoal * OLD_TICKS_PER_COAL;
             }
         }
-        displayTicksPerCoal = Math.max(1, nbt.contains("displayTicksPerCoal")
-                ? nbt.getInt("displayTicksPerCoal") : 1600);
+        displayMinutes = Math.max(0, nbt.getLong("displayMinutes"));
+        displaySeconds = Math.max(0, Math.min(59, nbt.getInt("displaySeconds")));
+        displayActive = nbt.getBoolean("displayActive");
         displayAlwaysActive = nbt.getBoolean("displayAlwaysActive");
     }
 

@@ -29,8 +29,10 @@ public final class HomeostaticHeaterClient implements ClientModInitializer {
         Text detail;
         if (heater.isAlwaysActiveForDisplay()) {
             detail = Text.translatable("hud.homeostatic_heater.always_active");
+        } else if (!heater.isActiveForDisplay()) {
+            detail = Text.translatable("hud.homeostatic_heater.inactive");
         } else {
-            FuelDuration time = FuelDuration.fromTicks(heater.getRemainingTicksForDisplay());
+            FuelDuration time = heater.getRemainingForDisplay();
             detail = Text.translatable("hud.homeostatic_heater.remaining", time.minutes(), time.paddedSeconds());
         }
 

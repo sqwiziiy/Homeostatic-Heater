@@ -5,6 +5,7 @@
   "message.homeostatic_heater.full": "Обогреватель заполнен углём",
   "hud.homeostatic_heater.remaining": "Осталось: %1$s мин %2$s с",
   "hud.homeostatic_heater.always_active": "Работает постоянно",
+  "hud.homeostatic_heater.inactive": "Неактивен",
   "advancements.homeostatic_heater.heating_season.title": "Отоплительный сезон",
   "advancements.homeostatic_heater.heating_season.description": "Скрафтите угольный обогреватель и подготовьтесь к холодам"
 }

@@ -5,6 +5,7 @@
   "message.homeostatic_heater.full": "The heater is full of coal",
   "hud.homeostatic_heater.remaining": "Remaining: %1$s min %2$s sec",
   "hud.homeostatic_heater.always_active": "Always active",
+  "hud.homeostatic_heater.inactive": "Inactive",
   "advancements.homeostatic_heater.heating_season.title": "Heating Season",
   "advancements.homeostatic_heater.heating_season.description": "Craft a coal heater and prepare for the cold"
 }
