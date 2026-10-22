@@ -1,0 +1,63 @@
+name: One-time Homeostatic Heater v1.6.0 release
+
+# Temporary bootstrap workflow: only the exact activation commit may publish.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v1.6.0-once.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  release-v1-6-0:
+    if: ${{ github.event.head_commit.message == 'release: trigger v1.6.0 publishing' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v7
+
+      - name: Ensure project and Modrinth credentials are ready
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$MODRINTH_TOKEN" || { echo "::error::Missing MODRINTH_TOKEN secret"; exit 1; }
+          test -n "$MODRINTH_PROJECT_ID" || { echo "::error::Missing MODRINTH_PROJECT_ID repository variable"; exit 1; }
+          version="$(sed -n 's/^mod_version=//p' gradle.properties)"
+          test "$version" = "1.6.0" || { echo "::error::Expected 1.6.0, found $version"; exit 1; }
+          if gh --version >/dev/null 2>&1; then
+            echo "GitHub CLI is available"
+          else
+            echo "::error::GitHub CLI not installed"; exit 1
+          fi
+
+      - name: Create GitHub Release v1.6.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk '/^## 1.6.0$/{inside=1;next} inside && /^## /{exit} inside{print}' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
+          if gh release view v1.6.0 >/dev/null 2>&1; then
+            echo "GitHub Release v1.6.0 already exists; reusing it."
+          else
+            gh release create v1.6.0 --target "$GITHUB_SHA" \
+              --title "Homeostatic Heater v1.6.0" \
+              --notes-file release-notes.md
+          fi
+
+      - name: Dispatch verified Modrinth publisher
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run publish-modrinth.yml --ref main -f release_tag=v1.6.0
+          echo "Modrinth publishing dispatched; inspect Publish to Modrinth workflow logs."
