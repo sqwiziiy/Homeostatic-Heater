@@ -2,6 +2,14 @@
 
 [Русская версия](CHANGELOG_RU.md)
 
+## 1.6.0
+
+- Added one lava bucket as long-burning fuel (returns empty bucket); lava and coal may coexist, and only one lava bucket is allowed at a time.
+- Added empty-main-hand on/off toggle with persistent fuel pause and off-state Homeostatic radiation disabled.
+- Added configurable `burn_ticks_per_lava` (default 20,000 ticks), retaining old configuration and block NBT compatibility.
+- Fixed the vanilla pickaxe mining tag namespace, including legacy blocks.
+- Added fuel state tests, updated localization, and Modrinth publishing on GitHub Release (with repository secret and variable).
+
 ## 1.5.0
 
 - The server now computes the HUD's remaining time and state; clients receive display-only values.

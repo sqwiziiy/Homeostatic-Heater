@@ -61,7 +61,9 @@ jobs:
           version: ${{ env.RELEASE_TAG }}
           version-type: release
           changelog-file: CHANGELOG.md
-          files: build/libs/homeostatic-heater-*.jar
+          files: |
+            build/libs/homeostatic-heater-*.jar
+            !build/libs/*-sources.jar
           loaders: fabric
           game-versions: '1.20.1'
           java: '17'

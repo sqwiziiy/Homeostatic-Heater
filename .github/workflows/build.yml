@@ -28,6 +28,11 @@ jobs:
       - name: Validate resource JSON
         run: find src/main/resources example-config server-config-datapack -type f \( -name '*.json' -o -name '*.mcmeta' \) -print0 | xargs -0 -n1 jq -e . > /dev/null
 
+      - name: Verify vanilla pickaxe tag path
+        run: |
+          test -f src/main/resources/data/minecraft/tags/blocks/mineable/pickaxe.json
+          jq -e '.values | index("homeostatic_heater:coal_heater") != null' src/main/resources/data/minecraft/tags/blocks/mineable/pickaxe.json
+
       - name: Build and run unit tests
         run: ./gradlew --no-daemon build
 
