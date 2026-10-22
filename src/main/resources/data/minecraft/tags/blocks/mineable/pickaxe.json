@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "homeostatic_heater:coal_heater",
+    "mentality_heater:coal_heater",
+    "stormheater:coal_heater"
+  ]
+}
