@@ -17,3 +17,14 @@ Homeostatic. Back up your main world and remove the old heater jar first.
 
 CI checks the build, resource JSON, and Java unit tests. Rendering, smoke,
 sound, crafting, and Homeostatic behavior require manual client testing.
+
+## v1.6.0 regression checks
+
+1. With Homeostatic installed, compare player temperature by an **unlit** heater, an active coal heater, a manually switched-off heater, and an active lava heater.
+2. Add one lava bucket: one empty bucket must return; confirm 16 min 40 sec on HUD with default settings. Try a second lava bucket: it must remain in hand.
+3. Queue lava behind coal and coal behind lava; fuel must continue without creating or deleting extra items.
+4. Turn off with empty main hand; verify smoke, light and warming stop immediately and the timer freezes. Turn on and verify it resumes.
+5. Restart dedicated server with burning and queued lava, with manual switch off, and with older v1.5.0/1.2.0 heaters. Fuel and state must survive.
+6. Mine with a pickaxe in Survival: heaters using new and legacy IDs must drop. Try bare hands and confirm no free drop with requiresTool.
+7. Use two clients in multiplayer and test full inventory, Creative, chunk unload/reload and `always_active=true`.
+8. Confirm GitHub Release publish workflow builds the exact version tag; publishing to Modrinth requires credentials.

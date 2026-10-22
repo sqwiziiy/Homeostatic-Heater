@@ -8,7 +8,7 @@
 ![Java 17](https://img.shields.io/badge/Java-17-E76F00)
 ![GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-3B57A6)
 
-A compact coal-fired heater for Minecraft Fabric 1.20.1. It warms nearby players
+A compact coal- and lava-fueled heater for Minecraft Fabric 1.20.1. It warms nearby players
 through Homeostatic's block-radiation datapack system, without mixins, patched
 Homeostatic classes, or world conversion.
 
@@ -23,7 +23,9 @@ Homeostatic classes, or world conversion.
   **Inactive**, or **Always active**. The server computes the status and time;
   clients only display the synchronized result.
 - Crafting it awards the **Heating Season** advancement with a campfire icon.
-- Configurable burn time, coal capacity, and fuel-free always-active mode.
+- Burns coal, charcoal, or up to **one lava bucket** (returns the empty bucket). Lava burns longer than coal.
+- Right-click with an empty main hand to switch the heater off/on, pausing fuel consumption.
+- Configurable coal and lava burn durations, coal capacity, and fuel-free always-active mode.
 - A 3D inventory model, gently animated fire, ignition sound, occasional
   crackling, and occasional smoke from the top while active.
 
@@ -56,49 +58,53 @@ only to illustrate the recipe; they are not included in the mod jar.
 
 ## Using the heater
 
-Find it in the **Functional Blocks** creative tab, or use
-`/give @s homeostatic_heater:coal_heater`. Right-click it with coal or charcoal.
-By default, each piece burns for 1,600 ticks (80 seconds) and the heater holds
-16 pieces, including the currently burning one. When full, it keeps your coal
-and displays a message. It emits light while active and drops itself when
-broken; unused fuel is not recovered.
+Find the heater in **Functional Blocks**, or use
+`/give @s homeostatic_heater:coal_heater`.
 
-There is no inventory GUI: fuel goes directly into the block. The front has a
-restrained two-frame fire animation while lit; the inventory item uses a 3D
-block model. Adding fuel plays the flint-and-steel sound. While active, the
-heater occasionally crackles and releases a small smoke particle from its top.
+- Right-click with coal or charcoal to add fuel. By default, one coal burns
+  for **80 seconds**. Up to 16 coal can be stored, including burning coal.
+- Right-click with a **lava bucket** to add a single long-burning fuel load.
+  One lava bucket burns for **16 minutes 40 seconds**, and returns **one empty
+  bucket**. A second lava bucket is rejected while the first is burning or
+  queued. You can still store coal alongside lava. Queued lava burns before
+  queued coal.
+- Right-click with an **empty main hand** to turn the heater off or on.
+  Turning it off pauses the fuel timer and immediately disables light, smoke,
+  and Homeostatic heat; restarting resumes from the stored time.
+- Hold Shift and look at a placed heater for the server-synchronized status.
+  **Switched off** shows the remaining fuel time.
 
-The Shift status is informational only. Burn time, fuel capacity, and active
-state are controlled by the server; a modified client cannot grant itself heat
-or fuel. The server synchronizes display data about once per second.
+Fuel loading, switching, timing, and radiation state are server-controlled.
+There is no inventory GUI. The block drops itself if broken, but unused
+stored fuel is not refunded. The server synchronizes the HUD around once per
+second during normal burning. Creative mode does not consume items.
 
 ## Server configuration
 
-After the first server start, edit `config/homeostatic_heater.json` in the
-server directory. An [example](example-config/homeostatic_heater.json) is included.
+Edit `config/homeostatic_heater.json` **on the server** and restart to apply changes:
 
 ```json
 {
   "burn_ticks_per_coal": 1600,
+  "burn_ticks_per_lava": 20000,
   "max_coal": 16,
   "always_active": false
 }
 ```
 
-| Setting | Default | Purpose |
+| Setting | Default | Meaning |
 | --- | ---: | --- |
-| `burn_ticks_per_coal` | `1600` | Heat duration per coal; 20 ticks = 1 second |
-| `max_coal` | `16` | Maximum coal pieces including the burning one |
-| `always_active` | `false` | Stay lit without consuming fuel |
+| `burn_ticks_per_coal` | `1600` | Coal / charcoal burn ticks |
+| `burn_ticks_per_lava` | `20000` | One lava bucket burn ticks |
+| `max_coal` | `16` | Maximum stored coal items (independent of lava) |
+| `always_active` | `false` | Free heating **only while manually switched on** |
 
-`burn_ticks_per_coal` accepts 1–1,728,000 and `max_coal` accepts 1–64. Restart
-the server after changes. Clients do not need a matching config. Existing stored
-coal is preserved when always-active mode is enabled. Invalid config files are
-left untouched; defaults are used and a warning is logged.
-
-Heaters from version 1.2.0 and earlier migrate their remaining fuel when
-loaded. Lowering `max_coal` does not delete fuel already stored; it only blocks
-new coal until the stored amount drops below the new limit.
+20 ticks = 1 second. Both burn durations accept 1–1,728,000,
+and `max_coal` accepts 1–64. Old config files automatically use the default
+lava duration; they are not overwritten. Bad configs are preserved and produce
+a warning. Previously placed blocks, including legacy registry IDs and coal
+save data, remain compatible. When switching to `always_active`, saved
+fuel remains stored and paused. Client configs do not change server behavior.
 
 ## Homeostatic heat strength
 
@@ -117,8 +123,8 @@ Homeostatic's scan radius.
 
 1. Install Fabric Loader for Minecraft 1.20.1 and Fabric API on the server and
    every client.
-2. Install a compatible Homeostatic 1.20.1 build to enable warming. The heater
-   block itself can load without Homeostatic.
+2. Install a compatible Homeostatic 1.20.1 build on **both server and client**.
+   Homeostatic is a required dependency.
 3. Remove older heater jars. Put the release jar in the server's and every
    client's `mods/` directory. Keep only one version.
 4. Back up your world, start the server, join with a matching client mod set,
@@ -137,10 +143,18 @@ export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 ./gradlew build
 ```
 
-The jar is `build/libs/homeostatic-heater-1.5.0.jar`. GitHub Actions validates
+The jar is `build/libs/homeostatic-heater-1.6.0.jar`. GitHub Actions validates
 resource JSON, runs unit tests, builds the jar with Java 17, and uploads it as
 a build artifact. Rendering, particles, sound, crafting, and Homeostatic
 temperature behavior still require the [in-game checklist](TESTING.md).
+
+## Publishing on Modrinth
+
+When a **GitHub Release** is published, the release workflow builds the exact
+GitHub tag, runs tests and publishes its jar to Modrinth. To activate it,
+follow [PUBLISHING.md](PUBLISHING.md). Until the Modrinth token and project ID
+are configured, the job builds but **skips the upload**. Existing releases
+can be published later using manual workflow dispatch.
 
 License: [GNU GPL-3.0-only](LICENSE) for the mod source and original assets in
 `artwork/` and `src/main/resources/`. The three vanilla recipe icons in

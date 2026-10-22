@@ -13,12 +13,13 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Server-side settings loaded at startup; invalid files are never overwritten. */
-public record HeaterConfig(int burnTicksPerCoal, int maxCoal, boolean alwaysActive) {
+/** Server settings, loaded once at startup; invalid files are preserved. */
+public record HeaterConfig(int burnTicksPerCoal, int burnTicksPerLava, int maxCoal, boolean alwaysActive) {
     private static final Logger LOGGER = LoggerFactory.getLogger("homeostatic_heater");
     private static final String DEFAULT_JSON = """
             {
               "burn_ticks_per_coal": 1600,
+              "burn_ticks_per_lava": 20000,
               "max_coal": 16,
               "always_active": false
             }
@@ -34,7 +35,7 @@ public record HeaterConfig(int burnTicksPerCoal, int maxCoal, boolean alwaysActi
             return parse(Files.readString(path, StandardCharsets.UTF_8));
         } catch (IOException | RuntimeException exception) {
             LOGGER.warn("Cannot read {}; using default heater settings without changing the file", path, exception);
-            return new HeaterConfig(1600, 16, false);
+            return new HeaterConfig(1600, 20000, 16, false);
         }
     }
 
@@ -42,6 +43,7 @@ public record HeaterConfig(int burnTicksPerCoal, int maxCoal, boolean alwaysActi
         JsonObject json = JsonParser.parseString(jsonText).getAsJsonObject();
         return new HeaterConfig(
                 integer(json, "burn_ticks_per_coal", 1600, 1, 1_728_000),
+                integer(json, "burn_ticks_per_lava", 20000, 1, 1_728_000),
                 integer(json, "max_coal", 16, 1, 64),
                 booleanValue(json, "always_active", false));
     }

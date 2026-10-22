@@ -1,5 +1,6 @@
 {
   "burn_ticks_per_coal": 1600,
+  "burn_ticks_per_lava": 20000,
   "max_coal": 16,
   "always_active": false
 }

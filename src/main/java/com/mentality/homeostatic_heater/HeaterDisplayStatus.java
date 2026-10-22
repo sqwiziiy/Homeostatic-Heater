@@ -1,11 +1,9 @@
 package com.mentality.homeostatic_heater;
 
-/** Server-computed status sent to clients for display only. */
-public record HeaterDisplayStatus(boolean active, boolean alwaysActive, FuelDuration remaining) {
-    public static HeaterDisplayStatus fromFuel(int burnTicksLeft, int queuedCoal,
-                                                int ticksPerCoal, boolean alwaysActive) {
-        FuelDuration remaining = FuelDuration.fromTicks(
-                FuelDuration.totalTicks(burnTicksLeft, queuedCoal, ticksPerCoal));
-        return new HeaterDisplayStatus(alwaysActive || burnTicksLeft > 0, alwaysActive, remaining);
+/** Server-computed display state, sent to clients without allowing client-side edits. */
+public record HeaterDisplayStatus(boolean active, boolean alwaysActive, boolean enabled, FuelDuration remaining) {
+    public static HeaterDisplayStatus fromFuel(HeaterFuelState fuel, HeaterConfig config) {
+        return new HeaterDisplayStatus(fuel.isLit(config), config.alwaysActive(), fuel.enabled(),
+                FuelDuration.fromTicks(fuel.remainingTicks(config)));
     }
 }
