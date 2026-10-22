@@ -8,7 +8,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.hit.BlockHitResult;
 
-/** A small tooltip next to the crosshair while sneaking and looking at a heater. */
+/** Server-synced status while sneaking and aiming at a heater. */
 public final class HomeostaticHeaterClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
@@ -27,12 +27,15 @@ public final class HomeostaticHeaterClient implements ClientModInitializer {
 
         Text title = Text.translatable("block.homeostatic_heater.coal_heater");
         Text detail;
-        if (heater.isAlwaysActiveForDisplay()) {
+        FuelDuration time = heater.getRemainingForDisplay();
+        if (!heater.isEnabledForDisplay()) {
+            detail = Text.translatable("hud.homeostatic_heater.disabled",
+                    time.minutes(), time.paddedSeconds());
+        } else if (heater.isAlwaysActiveForDisplay()) {
             detail = Text.translatable("hud.homeostatic_heater.always_active");
         } else if (!heater.isActiveForDisplay()) {
             detail = Text.translatable("hud.homeostatic_heater.inactive");
         } else {
-            FuelDuration time = heater.getRemainingForDisplay();
             detail = Text.translatable("hud.homeostatic_heater.remaining", time.minutes(), time.paddedSeconds());
         }
 
