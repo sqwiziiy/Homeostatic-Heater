@@ -14,16 +14,16 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out sources
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Validate resource JSON
         run: find src/main/resources example-config server-config-datapack -type f \( -name '*.json' -o -name '*.mcmeta' \) -print0 | xargs -0 -n1 jq -e . > /dev/null
@@ -32,7 +32,7 @@ jobs:
         run: ./gradlew --no-daemon build
 
       - name: Upload mod jar
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: homeostatic-heater-${{ github.sha }}
           path: |
